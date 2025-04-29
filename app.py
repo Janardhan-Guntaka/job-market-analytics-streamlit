@@ -36,9 +36,11 @@ with tab1:
     query_salary = """
     SELECT job_title, salary_range, company_id
     FROM Job_Postings
+    WHERE salary_range ~ '^\\$?[0-9]+K$'
     ORDER BY CAST(REPLACE(REPLACE(salary_range, 'K', ''), '$', '')::int * 1000) DESC
     LIMIT 5;
     """
+
     df_salary = pd.read_sql_query(query_salary, conn)
     st.dataframe(df_salary)
 
