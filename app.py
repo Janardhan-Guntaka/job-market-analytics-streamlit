@@ -5,24 +5,29 @@ import pandas as pd
 # --- Configuration ---
 st.set_page_config(page_title="Job Market Analytics Dashboard", page_icon="📈", layout="wide")
 
-# --- Database Connection ---
+# --- Database Connection Management ---
+
 @st.cache_resource
 def connect_db():
-    conn = psycopg2.connect(
+    return psycopg2.connect(
         host=st.secrets["db_host"],
         database=st.secrets["db_name"],
         user=st.secrets["db_user"],
         password=st.secrets["db_password"],
         port="5432"
     )
+
+def get_connection():
+    """Always get a fresh live connection."""
+    try:
+        conn = connect_db()
+    except Exception:
+        conn = connect_db()
     return conn
 
-# Connect
-conn = connect_db()
-
-# --- Title and Intro ---
+# --- Title and Introduction ---
 st.title("📊 Job Market Analytics Dashboard")
-st.markdown("Welcome! Explore live job market data. See top insights or run your own custom queries!")
+st.markdown("Explore real-time insights into the job market. View analytics or run your own SQL queries!")
 
 # --- Tabs for Navigation ---
 tab1, tab2 = st.tabs(["📈 Top Insights", "🛠 Run Your Query"])
@@ -33,6 +38,7 @@ with tab1:
 
     # Top 5 Highest Paying Jobs
     st.subheader("💰 Top 5 Highest Paying Jobs")
+    conn = get_connection()
     query_salary = """
     SELECT job_title, salary_range, company_id
     FROM Job_Postings
@@ -47,6 +53,7 @@ with tab1:
 
     # Most In-Demand Skills
     st.subheader("🔥 Top 10 Most In-Demand Skills")
+    conn = get_connection()
     query_skills = """
     SELECT s.skill_name, COUNT(*) AS demand
     FROM Job_Skills js
@@ -62,6 +69,7 @@ with tab1:
 
     # Companies with Most Jobs
     st.subheader("🏢 Companies with Most Job Postings")
+    conn = get_connection()
     query_companies = """
     SELECT c.company_name, COUNT(j.job_id) AS job_post_count
     FROM Companies c
@@ -82,17 +90,16 @@ with tab2:
     if user_query:
         if user_query.strip().lower().startswith("select"):
             try:
+                conn = get_connection()
                 df_user_query = pd.read_sql_query(user_query, conn)
                 st.success("✅ Query executed successfully!")
                 st.dataframe(df_user_query)
             except Exception as e:
                 st.error(f"❌ Error executing query: {e}")
         else:
-            st.warning("⚠️ Only SELECT queries are allowed for security.")
+            st.warning("⚠️ Only SELECT queries are allowed for security reasons.")
 
 # --- Footer ---
 st.markdown("---")
 st.caption("Built with ❤️ using Streamlit + PostgreSQL + Python")
 
-# --- Close Connection ---
-conn.close()
