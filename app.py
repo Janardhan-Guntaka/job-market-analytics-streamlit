@@ -9,10 +9,10 @@ st.set_page_config(page_title="Job Market Analytics Dashboard", page_icon="📈"
 @st.cache_resource
 def connect_db():
     conn = psycopg2.connect(
-        host=st.secrets["dpg-d081bq7gi27c73822eeg-a"],
-        database=st.secrets["job_market_db"],
-        user=st.secrets["job_market_db_user"],
-        password=st.secrets["8jHGD1A4aQrpmd2G8RFbWiOl2AVVqLsg"],
+        host=st.secrets["db_host"],
+        database=st.secrets["db_name"],
+        user=st.secrets["db_user"],
+        password=st.secrets["db_password"],
         port="5432"
     )
     return conn
